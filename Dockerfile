@@ -148,18 +148,6 @@ RUN sage --pip install pari_jupyter
 RUN \
   pip3 install jupyterlab
 
-# Install LEAN proof assistant
-RUN \
-     export VERSION=3.4.1 \
-  && mkdir -p /opt/lean \
-  && cd /opt/lean \
-  && wget https://github.com/leanprover/lean/releases/download/v$VERSION/lean-$VERSION-linux.tar.gz \
-  && tar xf lean-$VERSION-linux.tar.gz \
-  && rm lean-$VERSION-linux.tar.gz \
-  && rm -f latest \
-  && ln -s lean-$VERSION-linux latest \
-  && ln -s /opt/lean/latest/bin/lean /usr/local/bin/lean
-
 # Install all aspell dictionaries, so that spell check will work in all languages.  This is
 # used by cocalc's spell checkers (for editors).  This takes about 80MB, which is well worth it.
 RUN \
