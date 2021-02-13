@@ -36,7 +36,6 @@ RUN \
        libreadline-dev \
        htop \
        screen \
-       pandoc \
        aspell \
        poppler-utils \
        net-tools \
@@ -53,6 +52,14 @@ RUN \
        nginx \
        rsync \
        tidy
+
+# up-to-date-er pandoc
+ARG PANDOC=2.11.4
+RUN \
+    cd /tmp \
+    && wget https://github.com/jgm/pandoc/releases/download/${PANDOC}/pandoc-${PANDOC}-1-amd64.deb \
+    && sudo apt install -y /tmp/pandoc-${PANDOC}-1-amd64.deb \
+    && rm -f pandoc-${PANDOC}-1-amd64.deb
 
  RUN \
      apt-get update \
