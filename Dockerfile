@@ -14,12 +14,15 @@ ENV TERM screen
 # So we can source (see http://goo.gl/oBPi5G)
 RUN rm /bin/sh && ln -s /bin/bash /bin/sh
 
-# Ubuntu software that are used by CoCalc (latex, pandoc, sage, jupyter)
+# Ubuntu software that are used by CoCalc (latex, sage, jupyter)
 RUN \
      apt-get update \
   && DEBIAN_FRONTEND=noninteractive apt-get install -y \
        software-properties-common \
        texlive \
+       texlive-metapost \
+       texlive-pictures \
+       texlive-pstricks \
        texlive-latex-extra \
        texlive-extra-utils \
        texlive-xetex \
