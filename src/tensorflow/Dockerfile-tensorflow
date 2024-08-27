@@ -6,11 +6,9 @@
 # various Jupyter kernels, including ones for Python, Octave, and JavaScript. The
 # image is built on top of the Ubuntu 22.04 operating system.
 
-ARG SAGEMATH_TAG=
-ARG ARCH=
-FROM sagemathinc/sagemath-core${ARCH}:${SAGEMATH_TAG} as sagemath
 
-FROM ubuntu:22.04
+ARG MYAPP_IMAGE=nvcr.io/nvidia/pytorch:23.10-py3
+FROM $MYAPP_IMAGE
 
 MAINTAINER William Stein <wstein@sagemath.com>
 
@@ -32,9 +30,6 @@ RUN \
   && DEBIAN_FRONTEND=noninteractive apt-get install -y \
        software-properties-common \
        texlive \
-       texlive-metapost \
-       texlive-pictures \
-       texlive-pstricks \
        texlive-latex-extra \
        texlive-extra-utils \
        texlive-xetex \
@@ -52,6 +47,7 @@ RUN \
        libreadline-dev \
        htop \
        screen \
+       pandoc \
        aspell \
        poppler-utils \
        net-tools \
@@ -72,14 +68,6 @@ RUN \
        libxml2-dev \
        libxslt-dev \
        libfuse-dev
-
-# up-to-date-er pandoc
-ARG PANDOC=2.11.4
-RUN \
-    cd /tmp \
-    && wget https://github.com/jgm/pandoc/releases/download/${PANDOC}/pandoc-${PANDOC}-1-amd64.deb \
-    && sudo apt install -y /tmp/pandoc-${PANDOC}-1-amd64.deb \
-    && rm -f pandoc-${PANDOC}-1-amd64.deb
 
  RUN \
      apt-get update \
@@ -157,7 +145,7 @@ RUN \
 #    https://github.com/sagemathinc/cocalc-compute-docker
 # NOTE: this copies from a multi-platform image, so it properly works
 # with both arm64 and x86_64!
-COPY --from=sagemath /usr/local/sage /usr/local/sage
+COPY --from=sagemathinc/sagemath-10.1-core /usr/local/sage /usr/local/sage
 
 # Run Sage once. Otherwise, the first startup is very slow.
 RUN /usr/local/sage/sage < /dev/null
@@ -207,7 +195,7 @@ RUN \
   && apt-get install -y aspell-*
 
 # Install Julia
-ARG JULIA=1.10.1
+ARG JULIA=1.9.4
 RUN cd /tmp \
  && export ARCH1=`uname -m | sed s/x86_64/x64/` \
  && export ARCH2=`uname -m` \
@@ -224,11 +212,15 @@ RUN echo '2+3' | julia
 # I figured out the directory /opt/julia/local/share/julia by inspecting the global varaible
 # DEPOT_PATH from within a running Julia session as a normal user, and also reading julia docs:
 #    https://pkgdocs.julialang.org/v1/glossary/
+# It was *incredibly* confusing, and the dozens of discussions of this problem that one finds
+# via Google are all very wrong, incomplete, misleading, etc.  It's truly amazing how
+# disorganized-wrt-Google information about Julia is, as compared to Node.js and Python.
 RUN echo 'using Pkg; Pkg.add("IJulia");' | JUPYTER=/usr/local/bin/jupyter JULIA_DEPOT_PATH=/opt/julia/local/share/julia JULIA_PKG=/opt/julia/local/share/julia julia
 RUN mv "$HOME/.local/share/jupyter/kernels/julia"* "/usr/local/share/jupyter/kernels/"
 
-# Also add Pluto and other VERY popular Julia packages system-wide.
-RUN echo 'using Pkg; Pkg.add("Pluto"); Pkg.add("Plots"); Pkg.add("Flux"); Pkg.add("Makie");' | JULIA_DEPOT_PATH=/opt/julia/local/share/julia JULIA_PKG=/opt/julia/local/share/julia julia
+# Also add Pluto system-wide, since we'll likely support it soon in cocalc, and also
+# Nemo and Hecke (some math software).
+RUN echo 'using Pkg; Pkg.add("Pluto"); Pkg.add("Nemo"); Pkg.add("Hecke")' | JULIA_DEPOT_PATH=/opt/julia/local/share/julia JULIA_PKG=/opt/julia/local/share/julia julia
 
 # Install R Jupyter Kernel package into R itself (so R kernel works), and some other packages e.g., rmarkdown which requires reticulate to use Python.
 RUN echo "install.packages(c('repr', 'IRdisplay', 'evaluate', 'crayon', 'pbdZMQ', 'httr', 'devtools', 'uuid', 'digest', 'IRkernel', 'formatR'), repos='https://cloud.r-project.org')" | sage -R --no-save

@@ -14,8 +14,8 @@ if [ -x /usr/bin/dircolors ]; then
     alias egrep='egrep --color=auto'
 fi
 
+export PATH=/usr/lib/postgresql/14/bin/:$HOME/.local/bin:$HOME/cocalc/src/scripts:$PATH
 
-export PGHOST="${PGHOST:-/projects/postgres/data/socket}"
+export PGHOST="${PGHOST:-/home/user/socket}"
 export PGUSER="${PGUSER:-smc}"
 export PGDATABASE="${PGDATABASE:-smc}"
-source /usr/local/nvm/nvm.sh
